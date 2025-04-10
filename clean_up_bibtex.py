@@ -1,6 +1,5 @@
 import bibtexparser
 from bibtexparser.bparser import BibTexParser
-from bibtexparser.customization import homogenize_latex_encoding
 from collections import defaultdict
 
 def is_arxiv_entry(entry):
@@ -9,9 +8,10 @@ def is_arxiv_entry(entry):
 
 def load_bibtex_file(file_path):
     with open(file_path, 'r', encoding='utf-8') as bibtex_file:
+        bibtex_str = bibtex_file.read()
         parser = BibTexParser(common_strings=True)
-        parser.customization = homogenize_latex_encoding
-        bib_database = bibtexparser.load(bibtex_file, parser=parser)
+        # Don't use homogenize_latex_encoding to avoid modifying titles
+        bib_database = bibtexparser.loads(bibtex_str, parser=parser)
     return bib_database.entries
 
 def remove_duplicates(entries):
@@ -35,6 +35,9 @@ def save_bibtex_file(entries, output_path):
     bib_database = bibtexparser.bibdatabase.BibDatabase()
     bib_database.entries = entries
     writer = bibtexparser.bwriter.BibTexWriter()
+    writer.indent = '    '
+    writer.order_entries_by = ('ID',)
+    writer.comma_first = False
     with open(output_path, 'w', encoding='utf-8') as bibtex_file:
         bibtex_file.write(writer.write(bib_database))
 
